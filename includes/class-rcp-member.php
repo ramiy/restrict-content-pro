@@ -1264,6 +1264,11 @@ class RCP_Member extends WP_User {
 			$user_level          = array_key_exists( 'user_level', $post_type_restrictions ) ? $post_type_restrictions['user_level'] : false;
 		}
 
+		// Check that user level is an array for backwards compatibility.
+		if ( ! empty( $user_level ) && ! is_array( $user_level ) ) {
+			$user_level = array( $user_level );
+		}
+
 		// Assume they have access until proven otherwise.
 		$ret = true;
 
@@ -1322,10 +1327,15 @@ class RCP_Member extends WP_User {
 
 		}
 
-		// Check post user role restrictions.
-		if ( $ret && ! empty( $user_level ) && 'all' != strtolower( $user_level ) ) {
-			if ( ! user_can( $this->ID, strtolower( $user_level ) ) ) {
-				$ret = false;
+		// Check post user role restrictions. User needs at least one of the selected roles.
+		if ( $ret && ! empty( $user_level ) && 'all' != strtolower( $user_level[0] ) ) {
+			foreach ( $user_level as $role ) {
+				if ( user_can( $this->ID, strtolower( $role ) ) ) {
+					$ret = true;
+					break;
+				} else {
+					$ret = false;
+				}
 			}
 		}
 

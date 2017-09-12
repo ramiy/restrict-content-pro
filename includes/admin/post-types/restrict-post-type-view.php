@@ -80,14 +80,16 @@ $role_set_display  = '' != $user_role ? '' : ' style="display:none;"';
 			<label for="rcp-user-level-field"><?php _e( 'Require member to have capabilities from this user role or higher.', 'rcp' ); ?></label>
 		</p>
 		<p>
-			<select name="rcp_user_level" id="rcp-user-level-field">
-				<?php
-				$roles = get_editable_roles();
-				$roles = array_merge( array( 'all' => array( 'name' => 'All' ) ), $roles );
-				foreach(  $roles as $key => $role ) : ?>
-					<option value="<?php echo esc_attr( $key ); ?>"<?php selected( $key, strtolower( $user_role ) ); ?>><?php echo translate_user_role( $role['name'] ); ?></option>
-				<?php endforeach; ?>
-			</select>
+			<?php
+			$roles          = get_editable_roles();
+			$roles          = array_merge( array( 'all' => array( 'name' => 'Any' ) ), $roles );
+			$selected_roles = is_array( $user_role ) ? $user_role : array( strtolower( $user_role ) );
+			foreach(  $roles as $key => $role ) : ?>
+				<label for="rcp_user_level_<?php echo esc_attr( $key ); ?>">
+					<input type="checkbox" name="rcp_user_level[]" id="rcp_user_level_<?php echo esc_attr( $key ); ?>" class="rcp-user-role" value="<?php echo esc_attr( $key ); ?>"<?php checked( true, in_array( $key, $selected_roles ) ); ?>>
+					&nbsp;<?php echo translate_user_role( $role['name'] ); ?><br/>
+				</label>
+			<?php endforeach; ?>
 		</p>
 	</div>
 

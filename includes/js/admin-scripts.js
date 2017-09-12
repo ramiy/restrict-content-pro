@@ -89,6 +89,22 @@ jQuery(document).ready(function($) {
 		Settings_Controls.prepare_sub_levels(type);
 	});
 
+	// Deselect all roles if "All" is selected.
+	$('.rcp-user-role').change(function (e) {
+		var this_role_value = $(this).val();
+		if ( 'all' === this_role_value && this.checked ) {
+			// Uncheck all other roles when selecting "All".
+			$(this).parents('p').find('input:checkbox').each(function() {
+				if ( $(this).val() !== 'all' ) {
+					$(this).removeAttr( 'checked' );
+				}
+			});
+		} else if ( 'all' !== this_role_value && this.checked ) {
+			// Uncheck "All" when selecting another role.
+			$('#rcp_user_level_all').removeAttr( 'checked' );
+		}
+	});
+
 	// settings tabs
 
 	//when the history state changes, gets the url from the hash and display

@@ -218,7 +218,12 @@ function rcp_save_meta_data( $post_id ) {
 
 	$content_excerpts  = isset( $rcp_options['content_excerpts'] ) ? $rcp_options['content_excerpts'] : 'individual';
 	$show_excerpt      = isset( $_POST['rcp_show_excerpt'] );
-	$user_role         = ! empty( $_POST['rcp_user_level'] ) ? sanitize_text_field( $_POST[ 'rcp_user_level' ] ) : 'All';
+	$user_role         = ! empty( $_POST['rcp_user_level'] ) ? $_POST[ 'rcp_user_level' ] : 'all';
+
+	if ( ! is_array( $user_role ) ) {
+		$user_role = array( $user_role );
+	}
+	$user_role = array_map( 'sanitize_text_field', $user_role );
 
 	if ( 'individual' === $content_excerpts && $show_excerpt ) {
 		update_post_meta( $post_id, 'rcp_show_excerpt', $show_excerpt );
