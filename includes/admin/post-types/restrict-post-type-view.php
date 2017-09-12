@@ -77,7 +77,7 @@ $role_set_display  = '' != $user_role ? '' : ' style="display:none;"';
 	</div>
 	<div id="rcp-metabox-field-role" class="rcp-metabox-field"<?php echo $role_set_display; ?>>
 		<p>
-			<label for="rcp-user-level-field"><?php _e( 'Require member to have capabilities from this user role or higher.', 'rcp' ); ?></label>
+			<label for="rcp-user-level-field"><?php _e( 'Require member to have capabilities from this user role.', 'rcp' ); ?></label>
 		</p>
 		<p>
 			<?php
