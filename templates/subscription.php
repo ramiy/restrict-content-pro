@@ -18,7 +18,9 @@ global $user_ID, $rcp_options;
 do_action( 'rcp_subscription_details_top' );
 
 if( isset( $_GET['profile'] ) && 'cancelled' == $_GET['profile'] ) : ?>
-<p class="rcp_success"><span><?php printf( __( 'Your %s subscription has been successfully cancelled. Your membership will expire on %s.', 'rcp' ), rcp_get_subscription(), rcp_get_expiration_date() ); ?></span></p>
+	<p class="rcp_success"><span><?php printf( __( 'Your %s subscription has been successfully cancelled. Your membership will expire on %s.', 'rcp' ), rcp_get_subscription(), rcp_get_expiration_date() ); ?></span></p>
+<?php elseif ( isset( $_GET['cancellation_failure'] ) ) : ?>
+	<p class="rcp_error"><span><?php echo esc_html( urldecode( $_GET['cancellation_failure'] ) ); ?> </span></p>
 <?php endif; ?>
 <table class="rcp-table" id="rcp-account-overview">
 	<thead>

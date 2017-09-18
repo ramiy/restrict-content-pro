@@ -1007,16 +1007,20 @@ function rcp_process_member_cancellation() {
 		$success  = rcp_cancel_member_payment_profile( get_current_user_id() );
 		$redirect = remove_query_arg( array( 'rcp-action', '_wpnonce', 'member-id' ), rcp_get_current_url() );
 
-		if( ! $success && rcp_is_paypal_subscriber() ) {
+		if( is_wp_error( $success ) && rcp_is_paypal_subscriber() ) {
 			// No profile ID stored, so redirect to PayPal to cancel manually
 			$redirect = 'https://www.paypal.com/cgi-bin/customerprofileweb?cmd=_manage-paylist';
 		}
 
-		if( $success ) {
+		if( true === $success ) {
 
 			do_action( 'rcp_process_member_cancellation', get_current_user_id() );
 
 			$redirect = add_query_arg( 'profile', 'cancelled', $redirect );
+
+		} elseif ( is_wp_error( $success ) ) {
+
+			$redirect = add_query_arg( 'cancellation_failure', urlencode( $success->get_error_message() ), $redirect );
 
 		}
 
@@ -1034,7 +1038,7 @@ add_action( 'template_redirect', 'rcp_process_member_cancellation' );
  *
  * @access  public
  * @since   2.1
- * @return  bool Whether or not the cancellation was successful.
+ * @return  true|WP_Error True if the profile was cancelled, WP_Error if it failed.
  */
 function rcp_cancel_member_payment_profile( $member_id = 0, $set_status = true ) {
 

@@ -523,7 +523,7 @@ class RCP_Member extends WP_User {
 	 *
 	 * @access  public
 	 * @since   2.7.2
-	 * @return  bool Whether or not the cancellation was successful.
+	 * @return  true|WP_Error True on success, WP_Error on failure.
 	 */
 	public function cancel_payment_profile( $set_status = true ) {
 
@@ -534,7 +534,7 @@ class RCP_Member extends WP_User {
 		if( ! $this->can_cancel() ) {
 			rcp_log( sprintf( 'Unable to cancel payment profile for member #%d.', $this->ID ) );
 
-			return $success;
+			return new WP_Error( 'ineligible_to_cancel', __( 'Member is not eligible to cancel their payment profile.', 'rcp' ) );
 		}
 
 		if( rcp_is_stripe_subscriber( $this->ID ) ) {
@@ -575,14 +575,9 @@ class RCP_Member extends WP_User {
 				$body = $e->getJsonBody();
 				$err  = $body['error'];
 
-				$error = "<h4>" . __( 'An error occurred', 'rcp' ) . "</h4>";
-				if( isset( $err['code'] ) ) {
-					$error .= "<p>" . __( 'Error code:', 'rcp' ) . " " . $err['code'] ."</p>";
-				}
-				$error .= "<p>Status: " . $e->getHttpStatus() ."</p>";
-				$error .= "<p>Message: " . $err['message'] . "</p>";
+				rcp_log( sprintf( 'Failed to cancel Stripe payment profile for member #%d. Error code: %s; Error Message: %s.', $this->ID, $err['code'], $err['message'] ) );
 
-				wp_die( $error, __( 'Error', 'rcp' ), array( 'response' => 401 ) );
+				$success = new WP_Error( $err['code'], $err['message'] );
 
 			} catch (\Stripe\Error\Authentication $e) {
 
@@ -592,14 +587,9 @@ class RCP_Member extends WP_User {
 				$body = $e->getJsonBody();
 				$err  = $body['error'];
 
-				$error = "<h4>" . __( 'An error occurred', 'rcp' ) . "</h4>";
-				if( isset( $err['code'] ) ) {
-					$error .= "<p>" . __( 'Error code:', 'rcp' ) . " " . $err['code'] ."</p>";
-				}
-				$error .= "<p>Status: " . $e->getHttpStatus() ."</p>";
-				$error .= "<p>Message: " . $err['message'] . "</p>";
+				rcp_log( sprintf( 'Failed to cancel Stripe payment profile for member #%d. Error code: %s; Error Message: %s.', $this->ID, $err['code'], $err['message'] ) );
 
-				wp_die( $error, __( 'Error', 'rcp' ), array( 'response' => 401 ) );
+				$success = new WP_Error( $err['code'], $err['message'] );
 
 			} catch (\Stripe\Error\ApiConnection $e) {
 
@@ -608,14 +598,9 @@ class RCP_Member extends WP_User {
 				$body = $e->getJsonBody();
 				$err  = $body['error'];
 
-				$error = "<h4>" . __( 'An error occurred', 'rcp' ) . "</h4>";
-				if( isset( $err['code'] ) ) {
-					$error .= "<p>" . __( 'Error code:', 'rcp' ) . " " . $err['code'] ."</p>";
-				}
-				$error .= "<p>Status: " . $e->getHttpStatus() ."</p>";
-				$error .= "<p>Message: " . $err['message'] . "</p>";
+				rcp_log( sprintf( 'Failed to cancel Stripe payment profile for member #%d. Error code: %s; Error Message: %s.', $this->ID, $err['code'], $err['message'] ) );
 
-				wp_die( $error, __( 'Error', 'rcp' ), array( 'response' => 401 ) );
+				$success = new WP_Error( $err['code'], $err['message'] );
 
 			} catch (\Stripe\Error\Base $e) {
 
@@ -624,23 +609,17 @@ class RCP_Member extends WP_User {
 				$body = $e->getJsonBody();
 				$err  = $body['error'];
 
-				$error = "<h4>" . __( 'An error occurred', 'rcp' ) . "</h4>";
-				if( isset( $err['code'] ) ) {
-					$error .= "<p>" . __( 'Error code:', 'rcp' ) . " " . $err['code'] ."</p>";
-				}
-				$error .= "<p>Status: " . $e->getHttpStatus() ."</p>";
-				$error .= "<p>Message: " . $err['message'] . "</p>";
+				rcp_log( sprintf( 'Failed to cancel Stripe payment profile for member #%d. Error code: %s; Error Message: %s.', $this->ID, $err['code'], $err['message'] ) );
 
-				wp_die( $error, __( 'Error', 'rcp' ), array( 'response' => 401 ) );
+				$success = new WP_Error( $err['code'], $err['message'] );
 
 			} catch (Exception $e) {
 
 				// Something else happened, completely unrelated to Stripe
 
-				$error = "<h4>" . __( 'An error occurred', 'rcp' ) . "</h4>";
-				$error .= print_r( $e, true );
+				rcp_log( sprintf( 'Failed to cancel Stripe payment profile for member #%d. Error: %s.', $this->ID, $e ) );
 
-				wp_die( $error, __( 'Error', 'rcp' ), array( 'response' => 401 ) );
+				$success = new WP_Error( 'unknown_error', $e );
 
 			}
 
@@ -702,7 +681,7 @@ class RCP_Member extends WP_User {
 				}
 
 				if( ! $success ) {
-					wp_die( sprintf( __( 'There was a problem cancelling the subscription, please contact customer support. Error: %s', 'rcp' ), $error_msg ), array( 'response' => 400 ) );
+					$success = new WP_Error( 'paypal_fail', $error_msg );
 				}
 
 			}
@@ -713,7 +692,9 @@ class RCP_Member extends WP_User {
 
 			if( is_wp_error( $cancelled ) ) {
 
-				wp_die( $cancelled->get_error_message(), __( 'Error', 'rcp' ), array( 'response' => 401 ) );
+				rcp_log( sprintf( 'Failed to cancel 2Checkout payment profile for member #%d. Error code: %s; Error Message: %s.', $this->ID, $cancelled->get_error_code(), $cancelled->get_error_message() ) );
+
+				$success = $cancelled;
 
 			} else {
 				$success = true;
@@ -724,7 +705,9 @@ class RCP_Member extends WP_User {
 
 			if( is_wp_error( $cancelled ) ) {
 
-				wp_die( $cancelled->get_error_message(), __( 'Error', 'rcp' ), array( 'response' => 401 ) );
+				rcp_log( sprintf( 'Failed to cancel Authorize.net payment profile for member #%d. Error code: %s; Error Message: %s.', $this->ID, $cancelled->get_error_code(), $cancelled->get_error_message() ) );
+
+				$success = $cancelled;
 
 			} else {
 				$success = true;
@@ -734,7 +717,9 @@ class RCP_Member extends WP_User {
 			$cancelled = rcp_braintree_cancel_member( $this->ID );
 
 			if ( is_wp_error( $cancelled ) ) {
-				wp_die( $cancelled->get_error_message(), __( 'Error', 'rcp' ), array( 'response' => 401 ) );
+				rcp_log( sprintf( 'Failed to cancel Braintree payment profile for member #%d. Error code: %s; Error Message: %s.', $this->ID, $cancelled->get_error_code(), $cancelled->get_error_message() ) );
+
+				$success = $cancelled;
 			} else {
 				$success = true;
 			}
@@ -744,9 +729,10 @@ class RCP_Member extends WP_User {
 			$this->cancel();
 		}
 
-		if( $success ) {
+		if( true === $success ) {
 			rcp_log( sprintf( 'Payment profile successfully cancelled for member #%d.', $this->ID ) );
-		} else {
+		} elseif ( is_wp_error( $success ) ) {
+			$this->add_note( sprintf( __( 'Failed cancelling payment profile. Error code: %s; Error Message: %s.', 'rcp' ), $success->get_error_code(), $success->get_error_message() ) );
 			rcp_log( sprintf( 'Failed cancelling payment profile for member #%d.', $this->ID ) );
 		}
 
