@@ -259,7 +259,20 @@ function rcp_excerpt_by_id( $post, $length = 50, $tags = '<a><em><strong><blockq
 		$the_excerpt .= $extra;
 	}
 
-	return wpautop( $the_excerpt );
+	$the_excerpt = wpautop( $the_excerpt );
+
+	/**
+	 * Filters the post excerpt.
+	 *
+	 * @param string  $the_excerpt Generated post excerpt.
+	 * @param WP_Post $post        Post object.
+	 * @param int     $length      Desired length of the excerpt in words.
+	 * @param string  $tags        The allowed HTML tags. These will not be stripped out.
+	 * @param string  $extra       Text to append to the end of the excerpt.
+	 *
+	 * @since 2.9.3
+	 */
+	return apply_filters( 'rcp_post_excerpt', $the_excerpt, $post, $length, $tags, $extra );
 }
 
 

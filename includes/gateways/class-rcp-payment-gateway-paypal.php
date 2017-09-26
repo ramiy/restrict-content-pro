@@ -281,18 +281,15 @@ class RCP_Payment_Gateway_PayPal extends RCP_Payment_Gateway {
 				die( 'no subscription level found' );
 			}
 
-			$subscription_name  = $posted['item_name'];
 			$subscription_key   = $posted['item_number'];
 			$has_trial          = ! empty( $posted['period1'] );
-			$amount             = ! $has_trial ? number_format( (float) $posted['mc_gross'], 2 ) : number_format( (float) $posted['mc_amount1'], 2 );
-			// not used anywhere?
-			// $amount2            = number_format( (float) $posted['mc_amount3'], 2 );
+			$amount             = ! $has_trial ? number_format( (float) $posted['mc_gross'], 2, '.', '' ) : number_format( (float) $posted['mc_amount1'], 2, '.', '' );
+
 			$payment_status     = ! empty( $posted['payment_status'] ) ? $posted['payment_status'] : false;
 			$currency_code      = $posted['mc_currency'];
-			$subscription_price = number_format( (float) rcp_get_subscription_price( $subscription_id ), 2 );
-
+			
 			$pending_amount = get_user_meta( $member->ID, 'rcp_pending_subscription_amount', true );
-			$pending_amount = number_format( (float) $pending_amount, 2 );
+			$pending_amount = number_format( (float) $pending_amount, 2, '.', '' );
 
 			$pending_payment_id = $member->get_pending_payment_id();
 

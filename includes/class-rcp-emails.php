@@ -78,14 +78,7 @@ class RCP_Emails {
 	 * @since 2.7
 	 */
 	private $member_id;
-
-	/**
-	 * Payment ID
-	 *
-	 * @since 2.7
-	 */
-	private $payment_id;
-
+	
 	/**
 	 * Container for storing all tags
 	 *
@@ -299,22 +292,6 @@ class RCP_Emails {
 
 		$this->setup_email_tags();
 
-		if ( empty( $this->payment_id ) ) {
-
-			global $rcp_payments_db;
-
-			$payment = $rcp_payments_db->get_payments( array(
-				'user_id' => $this->member_id,
-				'order'   => 'DESC',
-				'number'  => 1
-			) );
-
-			$payment = reset( $payment );
-
-			$this->payment_id = ! empty( $payment ) && is_object( $payment ) ? $payment->id : 0;
-
-		}
-
 		/**
 		 * Hooks before email is sent
 		 *
@@ -487,6 +464,11 @@ class RCP_Emails {
 				'tag'         => 'invoice_url',
 				'description' => __( 'The URL to the member\'s most recent invoice', 'rcp' ),
 				'function'    => 'rcp_email_tag_invoice_url'
+			),
+			array(
+				'tag'         => 'discount_code',
+				'description' => __( 'The discount code that was used with the most recent payment', 'rcp' ),
+				'function'    => 'rcp_email_tag_discount_code'
 			),
 			array(
 				'tag'         => 'member_id',

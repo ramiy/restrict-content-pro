@@ -202,7 +202,8 @@ function rcp_process_registration() {
 	delete_user_meta( $user_data['id'], 'rcp_pending_subscription_level' );
 	delete_user_meta( $user_data['id'], 'rcp_pending_subscription_key' );
 
-	do_action( 'rcp_form_processing', $_POST, $user_data['id'], $price );
+	// Backwards compatibility pre-2.9: set pending subscription key.
+	update_user_meta( $user_data['id'], 'rcp_pending_subscription_key', $subscription_key );
 
 	// Create a pending payment
 	$amount = ( ! empty( $trial_duration ) && ! rcp_has_used_trial() ) ? 0.00 : rcp_get_registration()->get_total();
@@ -226,6 +227,17 @@ function rcp_process_registration() {
 	$rcp_payments = new RCP_Payments();
 	$payment_id   = $rcp_payments->insert( $payment_data );
 	update_user_meta( $user_data['id'], 'rcp_pending_payment_id', $payment_id );
+
+	/**
+	 * Triggers after all the form data has been processed, but before the user is sent to the payment gateway.
+	 * The user's membership is pending at this point.
+	 *
+	 * @param array $_POST      Posted data.
+	 * @param int   $user_id    ID of the user registering.
+	 * @param float $price      Price of the membership.
+	 * @param int   $payment_id ID of the pending payment associated with this registration.
+	 */
+	do_action( 'rcp_form_processing', $_POST, $user_data['id'], $price, $payment_id );
 
 	// process a paid subscription
 	if( $price > '0' || $trial_duration ) {

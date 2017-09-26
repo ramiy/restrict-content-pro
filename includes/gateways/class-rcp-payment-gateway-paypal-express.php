@@ -459,7 +459,7 @@ class RCP_Payment_Gateway_PayPal_Express extends RCP_Payment_Gateway {
 			die( 'no subscription level found' );
 		}
 
-		$amount = number_format( (float) $posted['mc_gross'], 2 );
+		$amount = number_format( (float) $posted['mc_gross'], 2, '.', '' );
 
 		// setup the payment info in an array for storage
 		$payment_data = array(
@@ -505,7 +505,7 @@ class RCP_Payment_Gateway_PayPal_Express extends RCP_Payment_Gateway {
 
 				// setup the payment info in an array for storage
 				$payment_data['date']           = date( 'Y-m-d H:i:s', strtotime( $posted['time_created'] ) );
-				$payment_data['amount']         = number_format( (float) $posted['initial_payment_amount'], 2 );
+				$payment_data['amount']         = number_format( (float) $posted['initial_payment_amount'], 2, '.', '' );
 				$payment_data['transaction_id'] = sanitize_text_field( $transaction_id );
 
 				if ( ! empty( $pending_payment_id ) ) {

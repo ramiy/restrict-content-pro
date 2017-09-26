@@ -27,6 +27,13 @@ $access_display    = is_numeric( $access_level ) ? '' : ' style="display:none;"'
 $level_set_display = ! empty( $sub_levels ) || ! empty( $is_paid ) ? '' : ' style="display:none;"';
 $levels_display    = is_array( $sub_levels ) ? '' : ' style="display:none;"';
 $role_set_display  = '' != $user_role ? '' : ' style="display:none;"';
+
+/* If nothing is set for "Members of subscription level(s)", default the choice
+ * to "Members of any subscription level(s)".
+ */
+if ( empty( $sub_levels ) && empty( $set_level ) ) {
+	$set_level = 'any';
+}
 ?>
 <div id="rcp-metabox-field-restrict-by" class="rcp-metabox-field">
 	<?php if ( ! empty( $pt_restrictions ) ) : ?>

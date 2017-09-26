@@ -14,6 +14,24 @@ if( isset( $_GET['edit_member'] ) ) {
 	$member_id = absint( $_GET['view_member'] );
 }
 $member = new RCP_Member( $member_id );
+
+$current_status        = $member->get_status();
+$subscription_level_id = $member->get_subscription_id();
+$expiration_date       = $member->get_expiration_date( false );
+
+// If member is pending, get pending details.
+if ( 'pending' == $current_status ) {
+
+	$pending_subscription_id = $member->get_pending_subscription_id();
+
+	if ( ! empty( $pending_subscription_id ) ) {
+		$subscription_level_id = $pending_subscription_id;
+	}
+
+	if ( empty( $expiration_date ) ) {
+		$expiration_date = $member->calculate_expiration( true );
+	}
+}
 ?>
 <h1>
 	<?php _e( 'Edit Member:', 'rcp' ); echo ' ' . $member->display_name; ?>
@@ -59,7 +77,6 @@ $member = new RCP_Member( $member_id );
 					<select name="status" id="rcp-status">
 						<?php
 							$statuses = array( 'active', 'expired', 'cancelled', 'pending', 'free' );
-							$current_status = rcp_get_status( $member->ID );
 							foreach( $statuses as $status ) :
 								echo '<option value="' . esc_attr( $status ) .  '"' . selected( $status, rcp_get_status( $member->ID ), false ) . '>' . ucwords( $status ) . '</option>';
 							endforeach;
@@ -85,7 +102,7 @@ $member = new RCP_Member( $member_id );
 					<select name="level" id="rcp-level">
 						<?php
 							foreach( rcp_get_subscription_levels( 'all' ) as $key => $level ) :
-								echo '<option value="' . esc_attr( absint( $level->id ) ) . '"' . selected( $level->id, $member->get_subscription_id(), false ) . '>' . esc_html( $level->name ) . '</option>';
+								echo '<option value="' . esc_attr( absint( $level->id ) ) . '"' . selected( $level->id, $subscription_level_id, false ) . '>' . esc_html( $level->name ) . '</option>';
 							endforeach;
 						?>
 					</select>
@@ -108,7 +125,6 @@ $member = new RCP_Member( $member_id );
 				</th>
 				<td>
 					<?php
-					$expiration_date = $member->get_expiration_date( false );
 					if( ! empty( $expiration_date ) && 'none' != $expiration_date ) {
 						$expiration_date = date( 'Y-m-d', strtotime( $expiration_date, current_time( 'timestamp' ) ) );
 					}
@@ -199,7 +215,7 @@ $member = new RCP_Member( $member_id );
 			<?php do_action( 'rcp_edit_member_after', $member->ID ); ?>
 		</tbody>
 	</table>
-	
+
 	<h4><?php _e( 'Payments', 'rcp' ); ?></h4>
 	<?php echo rcp_print_user_payments_formatted( $member->ID ); ?>
 

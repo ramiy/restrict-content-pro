@@ -18,7 +18,7 @@ global $rcp_login_form_args; ?>
 
 	<?php rcp_show_error_messages( 'login' ); ?>
 
-	<form id="rcp_login_form"  class="rcp_form" method="POST" action="<?php echo esc_url( rcp_get_current_url() ); ?>">
+	<form id="rcp_login_form"  class="<?php echo esc_attr( $rcp_login_form_args['class'] ); ?>" method="POST" action="<?php echo esc_url( rcp_get_current_url() ); ?>">
 
 		<?php do_action( 'rcp_before_login_form_fields' ); ?>
 

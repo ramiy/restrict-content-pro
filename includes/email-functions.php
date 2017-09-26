@@ -775,6 +775,45 @@ function rcp_email_tag_site_name() {
 }
 
 /**
+ * Email template tag: discount_code
+ * The discount code used with the most recent payment.
+ *
+ * @param int $member_id  The member ID.
+ * @param int $payment_id The ID of the member's latest payment.
+ *
+ * @since 2.9.4
+ * @return string
+ */
+function rcp_email_tag_discount_code( $member_id = 0, $payment_id = 0 ) {
+
+	/**
+	 * @var RCP_Payments $rcp_payments_db
+	 */
+	global $rcp_payments_db;
+
+	if ( ! empty( $payment_id ) ) {
+		$payment = $rcp_payments_db->get_payment( $payment_id );
+	} else {
+		$payment = $rcp_payments_db->get_payments( array(
+			'user_id' => $member_id,
+			'order'   => 'DESC',
+			'number'  => 1
+		) );
+
+		$payment = reset( $payment );
+	}
+
+	if ( is_object( $payment ) && ! empty( $payment->discount_code ) ) {
+		$discount_code = $payment->discount_code;
+	} else {
+		$discount_code = __( 'None', 'rcp' );
+	}
+
+	return $discount_code;
+
+}
+
+/**
  * Email template tag: email verification
  * The URL for verifying an email address.
  *

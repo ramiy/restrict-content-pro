@@ -33,7 +33,7 @@ function rcp_restrict_shortcode( $atts, $content = null ) {
 
 	global $rcp_options, $user_ID;
 
-	if ( strlen( trim( $atts['message'] ) ) > 0 ) {
+	if ( strlen( $atts['message'] ) > 0 ) {
 		$teaser = $atts['message'];
 	} elseif ( $atts['paid'] ) {
 		$teaser = $rcp_options['paid_message'];
