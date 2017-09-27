@@ -133,6 +133,12 @@ function rcp_admin_notices() {
 				$text = __( 'Member\'s payment profile cancelled successfully', 'rcp' );
 				break;
 
+			case 'member_cancelled_error' :
+
+				$text = __( 'The member\'s payment profile could not be cancelled. Please see the member\'s user notes for details.', 'rcp' );
+				$class = 'error';
+				break;
+
 			case 'verification_sent' :
 
 				$text = __( 'Verification email sent successfully.', 'rcp' );

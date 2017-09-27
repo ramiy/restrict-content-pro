@@ -101,7 +101,7 @@ function rcp_process_edit_member() {
 
 	if ( isset( $_POST['cancel_subscription'] ) && $member->can_cancel() ) {
 		rcp_log( sprintf( 'Cancelling payment profile for member #%d.', $user_id ) );
-		$member->cancel_payment_profile();
+		$cancelled = $member->cancel_payment_profile();
 	}
 
 	if ( $status !== $member->get_status() ) {
@@ -121,7 +121,15 @@ function rcp_process_edit_member() {
 
 	rcp_log( sprintf( '%s finished editing member #%d.', $current_user->user_login, $user_id ) );
 
-	wp_safe_redirect( admin_url( 'admin.php?page=rcp-members&edit_member=' . $user_id . '&rcp_message=user_updated' ) );
+	$redirect = admin_url( 'admin.php?page=rcp-members&edit_member=' . $user_id );
+
+	if ( isset( $cancelled ) && is_wp_error( $cancelled ) ) {
+		$redirect = add_query_arg( 'rcp_message', 'member_cancelled_error', $redirect );
+	} else {
+		$redirect = add_query_arg( 'rcp_message', 'user_updated', $redirect );
+	}
+
+	wp_safe_redirect( $redirect );
 	exit;
 
 }

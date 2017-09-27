@@ -725,7 +725,7 @@ class RCP_Member extends WP_User {
 			}
 		}
 
-		if( $success && $set_status ) {
+		if( true === $success && $set_status ) {
 			$this->cancel();
 		}
 
