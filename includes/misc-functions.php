@@ -755,7 +755,7 @@ function rcp_has_post_restrictions( $post_id ) {
 
 	if ( ! $restricted ) {
 		$rcp_user_level = get_post_meta( $post_id, 'rcp_user_level', true );
-		if ( ! empty( $rcp_user_level ) && 'All' !== $rcp_user_level ) {
+		if ( ! empty( $rcp_user_level ) && 'all' !== strtolower( $rcp_user_level ) ) {
 			$restricted = true;
 		}
 	}
