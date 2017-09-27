@@ -392,7 +392,7 @@ add_action( 'set_logged_in_cookie', 'rcp_set_user_logged_in_status', 10, 5 );
  */
 function rcp_clear_auth_cookie() {
 
-	if( ! rcp_no_account_sharing() || ( defined( 'REST_REQUEST' ) && REST_REQUEST ) ) {
+	if( ! rcp_no_account_sharing() || ( defined( 'REST_REQUEST' ) && REST_REQUEST ) || ! isset( $_COOKIE[ LOGGED_IN_COOKIE ] ) ) {
 		return;
 	}
 
@@ -441,7 +441,7 @@ add_action( 'clear_auth_cookie', 'rcp_clear_auth_cookie' );
 function rcp_can_user_be_logged_in() {
 	if ( is_user_logged_in() && rcp_no_account_sharing() ) {
 
-		if ( defined( 'REST_REQUEST' ) && REST_REQUEST ) {
+		if ( ( defined( 'REST_REQUEST' ) && REST_REQUEST ) || ! isset( $_COOKIE[ LOGGED_IN_COOKIE ] ) ) {
 			return;
 		}
 
