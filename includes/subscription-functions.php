@@ -372,13 +372,15 @@ function rcp_show_subscription_level( $level_id = 0, $user_id = 0 ) {
 	$used_trial = rcp_has_used_trial( $user_id );
 	$trial_duration = $rcp_levels_db->trial_duration( $level_id );
 
-	// Don't show free trial if user has already used it. Don't show if sub is free and user is already free
+	// Don't show free trial if user has already used it. Don't show if sub is free and user already has it. Don't show if sub is unlimited and user already has it.
 	if (
 		is_user_logged_in()
 		&&
 		( $sub_price == '0' && $sub_length->duration > 0 && $used_trial )
 		||
 		( $sub_price == '0' && $user_level == $level_id )
+		||
+		( empty( $sub_length->duration ) && $user_level == $level_id )
 		||
 		( ! empty( $trial_duration ) && $used_trial && ( $user_level == $level_id && ! rcp_is_expired( $user_id ) ) )
 	) {
