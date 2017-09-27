@@ -18,6 +18,7 @@
 <form id="rcp-add-payment" action="" method="post">
 	<table class="form-table">
 		<tbody>
+			<?php do_action( 'rcp_add_payment_before' ); ?>
 			<tr valign="top">
 				<th scope="row" valign="top">
 					<label for="rcp-user-id"><?php _e( 'User', 'rcp' ); ?></label>
@@ -71,6 +72,7 @@
 					<p class="description"><?php _e( 'The status of this payment.', 'rcp' ); ?></p>
 				</td>
 			</tr>
+			<?php do_action( 'rcp_add_payment_after' ); ?>
 		</tbody>
 	</table>
 	<p class="submit">

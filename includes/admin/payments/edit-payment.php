@@ -27,6 +27,7 @@ $subscription = rcp_get_subscription_details( $payment->object_id );
 <form id="rcp-edit-payment" action="" method="post">
 	<table class="form-table">
 		<tbody>
+		<?php do_action( 'rcp_edit_payment_before', $payment, $subscription, $user ); ?>
 		<tr valign="top">
 			<th scope="row" valign="top">
 				<label for="rcp-user-id"><?php _e( 'User', 'rcp' ); ?></label>
@@ -123,6 +124,7 @@ $subscription = rcp_get_subscription_details( $payment->object_id );
 				<a href="<?php echo esc_url( rcp_get_invoice_url( $payment_id ) ); ?>" class="button-secondary" target="_blank"><?php _e( 'View Invoice', 'rcp' ); ?></a>
 			</td>
 		</tr>
+		<?php do_action( 'rcp_edit_payment_after', $payment, $subscription, $user ); ?>
 		</tbody>
 	</table>
 	<p class="submit">
