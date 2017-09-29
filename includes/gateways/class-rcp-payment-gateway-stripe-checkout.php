@@ -58,8 +58,7 @@ class RCP_Payment_Gateway_Stripe_Checkout extends RCP_Payment_Gateway_Stripe {
 			'locale'            => 'auto',
 			'allowRememberMe'   => true,
 			'email'             => $email,
-			'currency'          => rcp_get_currency(),
-			'alipay'            => isset( $rcp_options['stripe_alipay'] ) && '1' === $rcp_options['stripe_alipay'] && 'USD' === rcp_get_currency() ? true : false
+			'currency'          => rcp_get_currency()
 		) );
 
 		$subscriptions = array();
@@ -139,7 +138,7 @@ class RCP_Payment_Gateway_Stripe_Checkout extends RCP_Payment_Gateway_Stripe {
 					}
 				}
 
-				if ( ! response.level.trial || checkoutArgs.alipay ) {
+				if ( ! response.level.trial ) {
 					checkoutArgs.amount = response.total * <?php echo rcp_stripe_get_currency_multiplier(); ?>;
 				}
 
