@@ -15,7 +15,7 @@
  * @return void
  */
 function rcp_tools_page() {
-	if( ! current_user_can( 'rcp_view_payments' ) ) {
+	if( ! current_user_can( 'rcp_manage_settings' ) ) {
 		return;
 	}
 
@@ -104,7 +104,7 @@ function rcp_tools_sysinfo_download() {
 		return;
 	}
 
-	if ( ! current_user_can( 'rcp_view_payments' ) ) {
+	if ( ! current_user_can( 'rcp_manage_settings' ) ) {
 		return;
 	}
 
@@ -166,7 +166,7 @@ function rcp_submit_debug_log() {
 		return;
 	}
 
-	if ( ! current_user_can( 'rcp_view_payments' ) ) {
+	if ( ! current_user_can( 'rcp_manage_settings' ) ) {
 		return;
 	}
 
