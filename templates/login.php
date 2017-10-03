@@ -16,6 +16,12 @@
 global $rcp_login_form_args; ?>
 <?php if( ! is_user_logged_in() ) : ?>
 
+	<?php if ( isset( $_GET['password-reset'] ) && 'true' == $_GET['password-reset'] ) { ?>
+		<p class="rcp_success">
+			<span><?php _e( 'Your password has been successfully reset. You may now login.', 'rcp' ); ?></span>
+		</p>
+	<?php } ?>
+
 	<?php rcp_show_error_messages( 'login' ); ?>
 
 	<form id="rcp_login_form"  class="<?php echo esc_attr( $rcp_login_form_args['class'] ); ?>" method="POST" action="<?php echo esc_url( rcp_get_current_url() ); ?>">
