@@ -18,7 +18,7 @@ global $rcp_login_form_args; ?>
 
 	<?php if ( isset( $_GET['password-reset'] ) && 'true' == $_GET['password-reset'] ) { ?>
 		<p class="rcp_success">
-			<span><?php _e( 'Your password has been successfully reset. You may now login.', 'rcp' ); ?></span>
+			<span><?php _e( 'Your password has been successfully reset. You may now log in.', 'rcp' ); ?></span>
 		</p>
 	<?php } ?>
 
