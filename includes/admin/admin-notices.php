@@ -137,6 +137,11 @@ function rcp_admin_notices() {
 
 				$text = __( 'Verification email sent successfully.', 'rcp' );
 				break;
+
+			case 'email_verified' :
+
+				$text = __( 'The user\'s email has been verified successfully', 'rcp' );
+				break;
 		}
 	}
 

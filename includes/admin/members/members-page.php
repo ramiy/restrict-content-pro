@@ -219,6 +219,7 @@ function rcp_members_page() {
 											<?php } ?>
 											<?php if( $rcp_member->is_pending_verification() ) : ?>
 												<span> | <a href="<?php echo wp_nonce_url( add_query_arg( array( 'rcp-action' => 'send_verification', 'member_id' => $member->ID ), $current_page ), 'rcp-verification-nonce' ); ?>" class="rcp_send_verification"><?php _e( 'Re-send Verification', 'rcp' ); ?></a></span>
+												<span> | <a href="<?php echo wp_nonce_url( add_query_arg( array( 'rcp-action' => 'verify_email', 'member_id' => $member->ID ), $current_page ), 'rcp-manually-verify-email-nonce' ); ?>" class="rcp_verify_email"><?php _e( 'Verify Email', 'rcp' ); ?></a></span>
 											<?php endif; ?>
 											<span class="rcp-separator"> | </span>
 											<span class="id rcp-member-id rcp-id-col"><?php echo __( 'ID:', 'rcp' ) . ' ' . $member->ID; ?></span>
