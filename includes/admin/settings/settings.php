@@ -1348,10 +1348,10 @@ function rcp_settings_page() {
 						</tr>
 						<tr valign="top">
 							<th>
-								<label for="rcp_settings[invoice_notes]"><?php _e( 'Notes', 'rcp' ); ?></label>
+								<label for="rcp_settings_invoice_notes"><?php _e( 'Notes', 'rcp' ); ?></label>
 							</th>
 							<td>
-								<textarea id="rcp_settings[invoice_notes]" style="width: 300px; height: 100px;" name="rcp_settings[invoice_notes]"><?php if( isset( $rcp_options['invoice_notes'] ) ) { echo $rcp_options['invoice_notes']; } ?></textarea>
+								<?php wp_editor( $rcp_options['invoice_notes'], 'rcp_settings_invoice_notes', array( 'textarea_name' => 'rcp_settings[invoice_notes]', 'teeny' => true ) ); ?>
 								<p class="description"><?php _e( 'Enter additional notes you would like displayed below the invoice totals.', 'rcp' ); ?></p>
 							</td>
 						</tr>
