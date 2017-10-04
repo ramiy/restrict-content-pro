@@ -295,7 +295,7 @@ global $rcp_options, $rcp_payment, $rcp_member; ?>
 
 				<?php if( ! empty( $rcp_options['invoice_notes'] ) ) : ?>
 					<article>
-						<?php echo wpautop( $rcp_options['invoice_notes'] ); ?>
+						<?php echo wpautop( wp_kses_post( $rcp_options['invoice_notes'] ) ); ?>
 					</article>
 				<?php endif; ?>
 
