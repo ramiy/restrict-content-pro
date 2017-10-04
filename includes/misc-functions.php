@@ -976,15 +976,7 @@ function rcp_format_amount( $amount ) {
 	// Prefix with currency symbol.
 	$new_amount = rcp_currency_filter( $new_amount );
 
-	/**
-	 * Filters the format for the amount.
-	 *
-	 * @param float $new_amount Formatted amount.
-	 * @param float $amount     Unformatted amount from the database.
-	 *
-	 * @since 2.9.5
-	 */
-	return apply_filters( 'rcp_format_amount', $new_amount, $amount );
+	return $new_amount;
 }
 
 /**

@@ -695,7 +695,7 @@ class RCP_Discounts {
 		if( $type == '%' ) {
 			$discount = $amount . '%';
 		} elseif( $type == 'flat' ) {
-			$discount = rcp_format_amount( $amount );
+			$discount = rcp_currency_filter( $amount );
 		}
 
 		return $discount;
