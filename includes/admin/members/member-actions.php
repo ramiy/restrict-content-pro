@@ -360,6 +360,7 @@ function rcp_process_manually_verify_email() {
 	rcp_log( sprintf( '%s manually verifying email of member #%d.', $current_user->user_login, $member->ID ) );
 
 	$member->verify_email();
+	$member->add_note( sprintf( __( 'Email manually verified by %s.', 'rcp' ), $current_user->user_login ) );
 
 	$redirect_url = wp_get_referer();
 
