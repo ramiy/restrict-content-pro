@@ -109,7 +109,7 @@ function rcp_member_levels_page() {
 								if( ! $price ) {
 									echo __( 'Free', 'rcp' );
 								} else {
-									echo rcp_currency_filter( $price );
+									echo rcp_format_amount( $price );
 								}
 								?>
 							</td>

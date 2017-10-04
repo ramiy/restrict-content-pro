@@ -962,6 +962,32 @@ function rcp_currency_decimal_filter( $decimals = 2 ) {
 }
 
 /**
+ * Formats the payment amount for display to enforce two decimal places
+ *
+ * @param float|int $amount
+ *
+ * @since 2.9.5
+ * @return float
+ */
+function rcp_format_amount( $amount ) {
+	// Enforce decimals, configure thousands separator.
+	$new_amount = number_format_i18n( $amount, rcp_currency_decimal_filter() );
+
+	// Prefix with currency symbol.
+	$new_amount = rcp_currency_filter( $new_amount );
+
+	/**
+	 * Filters the format for the amount.
+	 *
+	 * @param float $new_amount Formatted amount.
+	 * @param float $amount     Unformatted amount from the database.
+	 *
+	 * @since 2.9.5
+	 */
+	return apply_filters( 'rcp_format_amount', $new_amount, $amount );
+}
+
+/**
  * Gets the taxonomy term ids connected to the specified post ID.
  *
  * @param  int $post_id The post ID.

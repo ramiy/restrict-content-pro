@@ -686,7 +686,7 @@ function rcp_print_user_payments_formatted( $user_id ) {
 					<td data-colname="<?php esc_attr_e( 'Subscription', 'rcp' ); ?>"><?php echo esc_html( $payment->subscription ); ?></td>
 					<td data-colname="<?php esc_attr_e( 'Payment Type', 'rcp' ); ?>"><?php echo esc_html( $payment->payment_type ); ?></td>
 					<td data-colname="<?php esc_attr_e( 'Transaction ID', 'rcp' ); ?>"><?php echo rcp_get_merchant_transaction_id_link( $payment ); ?></td>
-					<td data-colname="<?php esc_attr_e( 'Amount', 'rcp' ); ?>"><?php echo ( '' == $payment->amount ) ? esc_html( rcp_currency_filter( $payment->amount2 ) ) : esc_html( rcp_currency_filter( $payment->amount ) ); ?></td>
+					<td data-colname="<?php esc_attr_e( 'Amount', 'rcp' ); ?>"><?php echo ( '' == $payment->amount ) ? esc_html( rcp_format_amount( $payment->amount2 ) ) : esc_html( rcp_format_amount( $payment->amount ) ); ?></td>
 					<td data-colname="<?php esc_attr_e( 'Status', 'rcp' ); ?>"><?php echo rcp_get_payment_status_label( $payment ); ?></td>
 					<td data-colname="<?php esc_attr_e( 'Invoice', 'rcp' ); ?>"><a href="<?php echo esc_url( rcp_get_invoice_url( $payment->id ) ); ?>" target="_blank"><?php _e( 'View Invoice', 'rcp' ); ?></a></td>
 				</tr>

@@ -714,7 +714,7 @@ function rcp_email_tag_amount( $member_id = 0, $payment_id = 0 ) {
 		}
 	}
 
-	return html_entity_decode( rcp_currency_filter( $payment->amount ), ENT_COMPAT, 'UTF-8' );
+	return html_entity_decode( rcp_format_amount( $payment->amount ), ENT_COMPAT, 'UTF-8' );
 }
 
 /**

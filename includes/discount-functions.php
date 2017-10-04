@@ -300,7 +300,7 @@ function rcp_discount_sign_filter( $amount, $type ) {
 	if( $type == '%' ) {
 		$discount = $amount . '%';
 	} elseif( $type == 'flat' ) {
-		$discount = rcp_currency_filter( $amount );
+		$discount = rcp_format_amount( $amount );
 	}
 	return $discount;
 }

@@ -48,10 +48,10 @@ global $rcp_checkout_details; ?>
 			<?php endif; ?>
 			<?php if( ! empty( $_GET['rcp-recurring'] ) && ! empty( $rcp_checkout_details['subscription']['fee'] ) ) : ?>
 				<td data-th="<?php esc_attr_e( 'Signup Fee', 'rcp' ); ?>">
-					<?php echo rcp_currency_filter( $rcp_checkout_details['subscription']['fee'] ); ?>
+					<?php echo rcp_format_amount( $rcp_checkout_details['subscription']['fee'] ); ?>
 				</td>
 			<?php endif; ?>
-			<td data-th="<?php esc_attr_e( 'Subscription Cost', 'rcp' ); ?>"><?php echo rcp_currency_filter( $rcp_checkout_details['PAYMENTREQUEST_0_AMT' ] ); ?></td>
+			<td data-th="<?php esc_attr_e( 'Subscription Cost', 'rcp' ); ?>"><?php echo rcp_format_amount( $rcp_checkout_details['PAYMENTREQUEST_0_AMT' ] ); ?></td>
 		</tr>
 	</tbody>
 </table>

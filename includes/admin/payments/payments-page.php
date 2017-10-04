@@ -120,7 +120,7 @@ function rcp_payments_page() {
 		<?php endif; ?>
 		</ul>
 
-		<p class="total"><strong><?php _e( 'Total Earnings', 'rcp' ); ?>: <?php echo rcp_currency_filter( number_format_i18n( $rcp_payments->get_earnings(), 2 ) ); ?></strong></p>
+		<p class="total"><strong><?php _e( 'Total Earnings', 'rcp' ); ?>: <?php echo rcp_format_amount( $rcp_payments->get_earnings() ); ?></strong></p>
 		<?php if( ! empty( $user_id ) ) : ?>
 		<p><a href="<?php echo admin_url( 'admin.php?page=rcp-payments' ); ?>" class="button-secondary" title="<?php _e( 'View all payments', 'rcp' ); ?>"><?php _e( 'Reset User Filter', 'rcp' ); ?></a></p>
 		<?php endif; ?>
@@ -150,7 +150,7 @@ function rcp_payments_page() {
 									<?php echo isset( $user->display_name ) ? esc_html( $user->display_name ) : sprintf( __( 'User #%d (deleted)', 'rcp' ), $payment->user_id ); ?>
 								</a></strong>
 								<span class="rcp-payment-amount-user-col">
-									<?php printf( _x( ' (%s) ', 'The payment amount shown in the user column on smaller devices', 'rcp' ), rcp_currency_filter( $payment->amount ) ); ?>
+									<?php printf( _x( ' (%s) ', 'The payment amount shown in the user column on smaller devices', 'rcp' ), rcp_format_amount( $payment->amount ) ); ?>
 								</span>
 								<div class="row-actions">
 									<?php if( current_user_can( 'rcp_manage_payments' ) ) : ?>
@@ -176,7 +176,7 @@ function rcp_payments_page() {
 								<?php echo esc_html( $payment->subscription ); ?>
 							</td>
 							<td data-colname="<?php _e( 'Date', 'rcp' ); ?>"><?php echo esc_html( $payment->date ); ?></td>
-							<td data-colname="<?php _e( 'Amount', 'rcp' ); ?>"><?php echo rcp_currency_filter( $payment->amount ); ?></td>
+							<td data-colname="<?php _e( 'Amount', 'rcp' ); ?>"><?php echo rcp_format_amount( $payment->amount ); ?></td>
 							<td data-colname="<?php _e( 'Type', 'rcp' ); ?>"><?php echo esc_html( $payment->payment_type ); ?></td>
 							<td data-colname="<?php _e( 'Transaction ID', 'rcp' ); ?>"><?php echo rcp_get_merchant_transaction_id_link( $payment ); ?></td>
 							<td data-colname="<?php _e( 'Status', 'rcp' ); ?>"><?php echo rcp_get_payment_status_label( $payment ); ?></td>

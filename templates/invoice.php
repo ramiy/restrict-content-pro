@@ -262,7 +262,7 @@ global $rcp_options, $rcp_payment, $rcp_member; ?>
 				<tbody>
 					<tr>
 						<td class="name"><?php echo $rcp_payment->subscription; ?></td>
-						<td class="price"><?php echo rcp_currency_filter( number_format( $rcp_payment->amount, rcp_currency_decimal_filter() ) ); ?></td>
+						<td class="price"><?php echo rcp_format_amount( $rcp_payment->amount ); ?></td>
 					</tr>
 					<?php do_action( 'rcp_invoice_items', $rcp_payment ); ?>
 				</tbody>
@@ -272,7 +272,7 @@ global $rcp_options, $rcp_payment, $rcp_member; ?>
 					<!-- Total -->
 					<tr>
 						<td class="name"><?php _e( 'Total Price:', 'rcp' ); ?></td>
-						<td class="price"><?php echo rcp_currency_filter( number_format( $rcp_payment->amount, rcp_currency_decimal_filter() ) ); ?></td>
+						<td class="price"><?php echo rcp_format_amount( $rcp_payment->amount ); ?></td>
 					</tr>
 
 					<!-- Paid -->
