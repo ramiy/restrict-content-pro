@@ -312,7 +312,7 @@ function rcp_register_form_stripe_checkout( $atts ) {
 	$data = wp_parse_args( $atts, array(
 		'id'                     => 0,
 		'data-key'               => $key,
-		'data-name'              => get_option( 'blogname' ),
+		'data-name'              => $subscription->name,
 		'data-description'       => $subscription->description,
 		'data-label'             => sprintf( __( 'Join %s', 'rcp' ), $subscription->name ),
 		'data-panel-label'       => $is_trial ? __( 'Start Trial', 'rcp' ) : __( 'Register', 'rcp' ),

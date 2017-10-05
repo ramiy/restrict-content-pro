@@ -53,13 +53,25 @@ class RCP_Payment_Gateway_Stripe_Checkout extends RCP_Payment_Gateway_Stripe {
 			$email = false;
 		}
 
-		$data = apply_filters( 'rcp_stripe_checkout_form_data', array(
+		$data = array(
 			'key'               => $this->publishable_key,
 			'locale'            => 'auto',
 			'allowRememberMe'   => true,
 			'email'             => $email,
 			'currency'          => rcp_get_currency()
-		) );
+		);
+
+		$image = get_site_icon_url();
+		if ( ! empty( $image ) ) {
+			$data['image'] = $image;
+		}
+
+		/**
+		 * Filters the Stripe Checkout arguments.
+		 *
+		 * @param array $data Array of arguments.
+		 */
+		$data = apply_filters( 'rcp_stripe_checkout_form_data', $data );
 
 		$subscriptions = array();
 		foreach ( rcp_get_subscription_levels( 'active' ) as $subscription ) {
