@@ -407,9 +407,10 @@ class RCP_Payments {
 
 		global $wpdb;
 
-		$payment = $wpdb->get_row( "SELECT * FROM {$this->db_name} WHERE {$field} = {$value}" );
+		$query   = $wpdb->prepare( "SELECT * FROM {$this->db_name} WHERE {$field} = %s", sanitize_text_field( $value ) );
+		$payment = $wpdb->get_row( $query );
 
-		if( empty( $payment->status ) ) {
+		if( is_object( $payment ) && empty( $payment->status ) ) {
 			$payment->status = 'complete';
 		}
 
