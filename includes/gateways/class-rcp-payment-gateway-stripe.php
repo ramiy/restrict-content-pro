@@ -684,6 +684,28 @@ class RCP_Payment_Gateway_Stripe extends RCP_Payment_Gateway {
 
 					}
 
+					// Refunded payment.
+					if ( $event->type == 'charge.refunded' ) {
+
+						rcp_log( 'Processing charge.refunded webhook.' );
+
+						$payment = $rcp_payments->get_payment_by( 'transaction_id', sanitize_text_field( $payment_event->id ) );
+
+						if ( empty( $payment ) ) {
+							rcp_log( sprintf( 'No payment found with transaction ID #%s.', $payment_event->id ) );
+						} else {
+							rcp_log( sprintf( 'Updating status of payment #%d (transaction ID %s) to "refunded".', $payment->id, $payment_event->id ) );
+
+							// Update status to refunded.
+							$rcp_payments->update( $payment->id, array(
+								'status' => 'refunded'
+							) );
+
+							// @todo Update member status to expired.
+						}
+
+					}
+
 					do_action( 'rcp_stripe_' . $event->type, $payment_event, $event );
 
 				} else {
