@@ -962,7 +962,7 @@ function rcp_currency_decimal_filter( $decimals = 2 ) {
 }
 
 /**
- * Formats the payment amount for display to enforce two decimal places
+ * Formats the payment amount for display to enforce decimal places and add currency symbol.
  *
  * @param float|int $amount
  *
