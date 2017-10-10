@@ -18,8 +18,6 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 /**
  * Register a new user
  *
- * @uses rcp_add_user_to_subscription()
- *
  * @access public
  * @since  1.0
  * @return void
