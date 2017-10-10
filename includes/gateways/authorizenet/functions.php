@@ -32,20 +32,43 @@ function rcp_authnet_cancel_member( $member_id = 0 ) {
 	}
 	$md5_hash_value  = isset( $rcp_options['authorize_hash_value'] ) ? sanitize_text_field( $rcp_options['authorize_hash_value'] ) : '';
 
-	require_once RCP_PLUGIN_DIR . 'includes/libraries/anet_php_sdk/AuthorizeNet.php';
+	require_once RCP_PLUGIN_DIR . 'includes/libraries/anet_php_sdk/autoload.php';
 
 	$member     = new RCP_Member( $member_id );
 	$profile_id = str_replace( 'anet_', '', $member->get_payment_profile_id() );
 
-	$arb        = new AuthorizeNetARB( $api_login_id, $transaction_key );
-	$arb->setSandbox( rcp_is_sandbox() );
+	/**
+	 * Create a merchantAuthenticationType object with authentication details.
+	 */
+	$merchant_authentication = new net\authorize\api\contract\v1\MerchantAuthenticationType();
+	$merchant_authentication->setName( $api_login_id );
+	$merchant_authentication->setTransactionKey( $transaction_key );
 
-	$response   = $arb->cancelSubscription( $profile_id );
+	/**
+	 * Set the transaction's refId
+	 */
+	$refId = 'ref' . time();
 
-	if( ! $response->isOK() || $response->isError() ) {
+	$request = new net\authorize\api\contract\v1\ARBCancelSubscriptionRequest();
+	$request->setMerchantAuthentication( $merchant_authentication );
+	$request->setRefId( $refId );
+	$request->setSubscriptionId( $profile_id );
 
-		$error = $response->getErrorMessage();
-		$ret   = new WP_Error( 'rcp_authnet_error', $error );
+	/**
+	 * Submit the request
+	 */
+	$controller  = new net\authorize\api\controller\ARBCancelSubscriptionController( $request );
+	$environment = rcp_is_sandbox() ? \net\authorize\api\constants\ANetEnvironment::SANDBOX : \net\authorize\api\constants\ANetEnvironment::PRODUCTION;
+	$response    = $controller->executeWithApiResponse( $environment );
+
+	/**
+	 * An error occurred - get the error message.
+	 */
+	if( $response == null || $response->getMessages()->getResultCode() != "Ok" ) {
+
+		$error_messages = $response->getMessages()->getMessage();
+		$error          = $error_messages[0]->getCode() . "  " .$error_messages[0]->getText();
+		$ret            = new WP_Error( 'rcp_authnet_error', $error );
 
 	}
 
@@ -138,7 +161,7 @@ function rcp_authorizenet_update_billing_card( $member_id = 0, $member_obj ) {
 		return;
 	}
 
-	require_once RCP_PLUGIN_DIR . 'includes/libraries/anet_php_sdk/AuthorizeNet.php';
+	require_once RCP_PLUGIN_DIR . 'includes/libraries/anet_php_sdk/autoload.php';
 
 	if ( rcp_is_sandbox() ) {
 		$api_login_id    = isset( $rcp_options['authorize_test_api_login'] ) ? sanitize_text_field( $rcp_options['authorize_test_api_login'] ) : '';
@@ -165,20 +188,59 @@ function rcp_authorizenet_update_billing_card( $member_id = 0, $member_obj ) {
 		$member     = new RCP_Member( $member_id );
 		$profile_id = str_replace( 'anet_', '', $member->get_payment_profile_id() );
 
-		$arb        = new AuthorizeNetARB( $api_login_id, $transaction_key );
-		$arb->setSandbox( rcp_is_sandbox() );
+		/**
+		 * Create a merchantAuthenticationType object with authentication details.
+		 */
+		$merchant_authentication = new net\authorize\api\contract\v1\MerchantAuthenticationType();
+		$merchant_authentication->setName( $api_login_id );
+		$merchant_authentication->setTransactionKey( $transaction_key );
 
-		$subscription = new AuthorizeNet_Subscription;
-		$subscription->creditCardCardNumber     = $card_number;
-		$subscription->creditCardExpirationDate = $card_exp_year . '-' . $card_exp_month;
-		$subscription->creditCardCardCode       = $card_cvc;
+		/**
+		 * Set the transaction's refId
+		 */
+		$refId = 'ref' . time();
 
-		$response = $arb->updateSubscription( $profile_id, $subscription );
+		$subscription = new net\authorize\api\contract\v1\ARBSubscriptionType();
 
-		if( ! $response->isOK() || $response->isError() ) {
+		/**
+		 * Update card details.
+		 */
+		$credit_card = new net\authorize\api\contract\v1\CreditCardType();
+		$credit_card->setCardNumber( $card_number );
+		$credit_card->setExpirationDate( $card_exp_year . '-' . $card_exp_month );
+		$credit_card->setCardCode( $card_cvc );
 
-			$error = $response->getErrorMessage();
+		$payment = new net\authorize\api\contract\v1\PaymentType();
+		$payment->setCreditCard( $credit_card );
 
+		$subscription->setPayment( $payment );
+
+		/**
+		 * Update the billing zip.
+		 */
+		$bill_to = new net\authorize\api\contract\v1\NameAndAddressType();
+		$bill_to->setZip( $card_zip );
+		$subscription->setBillTo( $bill_to );
+
+		/**
+		 * Make request to update details.
+		 */
+		$request = new net\authorize\api\contract\v1\ARBUpdateSubscriptionRequest();
+		$request->setMerchantAuthentication( $merchant_authentication );
+		$request->setRefId( $refId );
+		$request->setSubscriptionId( $profile_id );
+		$request->setSubscription( $subscription );
+
+		$controller  = new net\authorize\api\controller\ARBCancelSubscriptionController( $request );
+		$environment = rcp_is_sandbox() ? \net\authorize\api\constants\ANetEnvironment::SANDBOX : \net\authorize\api\constants\ANetEnvironment::PRODUCTION;
+		$response    = $controller->executeWithApiResponse( $environment );
+
+		/**
+		 * An error occurred - get the error message.
+		 */
+		if( $response == null || $response->getMessages()->getResultCode() != "Ok" ) {
+			$error_messages = $response->getMessages()->getMessage();
+			$error          = $error_messages[0]->getCode() . "  " .$error_messages[0]->getText();
 		}
 
 	}
