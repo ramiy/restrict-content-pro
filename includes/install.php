@@ -304,4 +304,6 @@ function rcp_create_tables() {
 		) CHARACTER SET utf8 COLLATE utf8_general_ci;";
 
 	@dbDelta( $sql );
+	
+	do_action( 'rcp_create_tables' );
 }
