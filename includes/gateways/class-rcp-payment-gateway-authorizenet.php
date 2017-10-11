@@ -70,7 +70,7 @@ class RCP_Payment_Gateway_Authorizenet extends RCP_Payment_Gateway {
 
 			$sub = rcp_get_subscription_length( $sub_id );
 
-			if( 'day' == $sub->duration_unit && $sub->duration < 7 ) {
+			if( rcp_registration_is_recurring() && 'day' == $sub->duration_unit && $sub->duration < 7 ) {
 				rcp_errors()->add( 'invalid_authorize_length', __( 'Authorize.net does not permit subscriptions with renewal periods less than 7 days.', 'rcp' ), 'register' );
 			}
 
@@ -129,38 +129,7 @@ class RCP_Payment_Gateway_Authorizenet extends RCP_Payment_Gateway {
 			$refId = 'ref' . time();
 
 			/**
-			 * Configure the subscription information.
-			 */
-			$subscription = new AnetAPI\ARBSubscriptionType();
-			$subscription->setName( substr( $this->subscription_name . ' - ' . $this->subscription_key, 0, 50 ) ); // Max of 50 characters
-
-			/**
-			 * Configure billing interval.
-			 */
-			$interval = new AnetAPI\PaymentScheduleType\IntervalAType();
-			$interval->setLength( $length );
-			$interval->setUnit( $unit );
-
-			/**
-			 * Configure billing schedule.
-			 */
-			$payment_schedule = new AnetAPI\PaymentScheduleType();
-			$payment_schedule->setInterval( $interval );
-			$payment_schedule->setStartDate( new DateTime( date( 'Y-m-d' ) ) );
-			$payment_schedule->setTotalOccurrences( $this->auto_renew ? 9999 : 1 );
-			$payment_schedule->setTrialOccurrences( $this->auto_renew ? 1 : 0 );
-
-			// Delay start date for free trials.
-			if ( $this->is_trial() ) {
-				$payment_schedule->setStartDate( new DateTime( date( 'Y-m-d' ), strtotime( $this->subscription_data['trial_duration'] . ' ' . $this->subscription_data['trial_duration_unit'], current_time( 'timestamp' ) ) ) );
-			}
-
-			$subscription->setPaymentSchedule( $payment_schedule );
-			$subscription->setAmount( $this->amount );
-			$subscription->setTrialAmount( $this->initial_amount );
-
-			/**
-			 * Add credit card details.
+			 * Add credit card details and create payment object.
 			 */
 			$credit_card = new AnetAPI\CreditCardType();
 			$credit_card->setCardNumber( sanitize_text_field( $_POST['rcp_card_number'] ) );
@@ -169,102 +138,251 @@ class RCP_Payment_Gateway_Authorizenet extends RCP_Payment_Gateway {
 
 			$payment = new AnetAPI\PaymentType();
 			$payment->setCreditCard( $credit_card );
-			$subscription->setPayment( $payment );
 
 			/**
-			 * Configure order details.
+			 * Create a recurring subscription.
 			 */
-			$order = new AnetAPI\OrderType();
-			$order->setDescription( $this->subscription_key );
-			$subscription->setOrder( $order );
+			if ( $this->auto_renew ) {
 
-			/**
-			 * Add customer information.
-			 */
-			$bill_to = new AnetAPI\NameAndAddressType();
-			$bill_to->setFirstName( $fname );
-			$bill_to->setLastName( $lname );
-			$bill_to->setZip( sanitize_text_field( $_POST['rcp_card_zip'] ) );
-			$subscription->setBillTo( $bill_to );
+				/**
+				 * Configure the subscription information.
+				 */
+				$subscription = new AnetAPI\ARBSubscriptionType();
+				$subscription->setName( substr( $this->subscription_name . ' - ' . $this->subscription_key, 0, 50 ) ); // Max of 50 characters
 
-			/**
-			 * Make API request.
-			 */
-			$request = new AnetAPI\ARBCreateSubscriptionRequest();
-			$request->setMerchantAuthentication( $merchant_authentication );
-			$request->setRefId( $refId );
-			$request->setSubscription( $subscription );
-			$controller = new AnetController\ARBCreateSubscriptionController( $request );
+				/**
+				 * Configure billing interval.
+				 */
+				$interval = new AnetAPI\PaymentScheduleType\IntervalAType();
+				$interval->setLength( $length );
+				$interval->setUnit( $unit );
 
-			$environment = rcp_is_sandbox() ? \net\authorize\api\constants\ANetEnvironment::SANDBOX : \net\authorize\api\constants\ANetEnvironment::PRODUCTION;
+				/**
+				 * Configure billing schedule.
+				 */
+				$payment_schedule = new AnetAPI\PaymentScheduleType();
+				$payment_schedule->setInterval( $interval );
+				$payment_schedule->setStartDate( new DateTime( date( 'Y-m-d' ) ) );
+				$payment_schedule->setTotalOccurrences( 9999 );
+				$payment_schedule->setTrialOccurrences( 1 );
 
-			$response = $controller->executeWithApiResponse( $environment );
-
-			if ( $response != null && $response->getMessages()->getResultCode() == "Ok" ) {
-
-				// If the customer has an existing subscription, we need to cancel it
-				if( $member->just_upgraded() && $member->can_cancel() ) {
-					$cancelled = $member->cancel_payment_profile( false );
+				// Delay start date for free trials.
+				if ( $this->is_trial() ) {
+					$payment_schedule->setStartDate( new DateTime( date( 'Y-m-d' ), strtotime( $this->subscription_data['trial_duration'] . ' ' . $this->subscription_data['trial_duration_unit'], current_time( 'timestamp' ) ) ) );
 				}
 
-				$member->set_recurring( $this->auto_renew );
-				$member->set_payment_profile_id( 'anet_' . $response->getSubscriptionId() );
+				$subscription->setPaymentSchedule( $payment_schedule );
+				$subscription->setAmount( $this->amount );
+				$subscription->setTrialAmount( $this->initial_amount );
 
-				if ( $this->is_trial() ) {
+				/**
+				 * Add credit card details to subscription.
+				 */
+				$subscription->setPayment( $payment );
 
-					// Complete $0 payment and activate account.
-					$rcp_payments_db->update( $this->payment->id, array(
-						'payment_type' => 'Credit Card',
-						'status'       => 'complete'
-					) );
+				/**
+				 * Configure order details.
+				 */
+				$order = new AnetAPI\OrderType();
+				$order->setDescription( $this->subscription_key );
+				$subscription->setOrder( $order );
+
+				/**
+				 * Add customer information.
+				 */
+				$bill_to = new AnetAPI\NameAndAddressType();
+				$bill_to->setFirstName( $fname );
+				$bill_to->setLastName( $lname );
+				$bill_to->setZip( sanitize_text_field( $_POST['rcp_card_zip'] ) );
+				$subscription->setBillTo( $bill_to );
+
+				/**
+				 * Make API request.
+				 */
+				$request = new AnetAPI\ARBCreateSubscriptionRequest();
+				$request->setMerchantAuthentication( $merchant_authentication );
+				$request->setRefId( $refId );
+				$request->setSubscription( $subscription );
+				$controller = new AnetController\ARBCreateSubscriptionController( $request );
+
+				$environment = rcp_is_sandbox() ? \net\authorize\api\constants\ANetEnvironment::SANDBOX : \net\authorize\api\constants\ANetEnvironment::PRODUCTION;
+
+				$response = $controller->executeWithApiResponse( $environment );
+
+				if ( $response != null && $response->getMessages()->getResultCode() == "Ok" ) {
+
+					// If the customer has an existing subscription, we need to cancel it
+					if ( $member->just_upgraded() && $member->can_cancel() ) {
+						$cancelled = $member->cancel_payment_profile( false );
+					}
+
+					$member->set_recurring( $this->auto_renew );
+					$member->set_payment_profile_id( 'anet_' . $response->getSubscriptionId() );
+
+					if ( $this->is_trial() ) {
+
+						// Complete $0 payment and activate account.
+						$rcp_payments_db->update( $this->payment->id, array(
+							'payment_type' => 'Credit Card',
+							'status'       => 'complete'
+						) );
+
+					} else {
+
+						// Manually set these values because webhook has a big delay and we want to activate the account ASAP.
+						$force_now  = $this->auto_renew || ( $member->get_subscription_id() != $this->subscription_id );
+						$expiration = $member->calculate_expiration( $force_now );
+						$member->set_subscription_id( $this->subscription_id );
+						$member->set_expiration_date( $expiration );
+						$member->set_status( 'active' );
+
+						/*
+						 * Set pending expiration date so this will be used in rcp_add_user_to_subscription() when the webhook
+						 * gets the transaction ID and completes the payment, which may take several hours.
+						 */
+						update_user_meta( $this->user_id, 'rcp_pending_expiration_date', $expiration );
+
+					}
+
+					$member->add_note( __( 'Subscription started in Authorize.net', 'rcp' ) );
+
+					if ( ! is_user_logged_in() ) {
+
+						// log the new user in
+						rcp_login_user_in( $this->user_id, $this->user_name, $_POST['rcp_user_pass'] );
+
+					}
+
+					do_action( 'rcp_authorizenet_signup', $this->user_id, $this, $response );
 
 				} else {
 
-					// Manually set these values because webhook has a big delay and we want to activate the account ASAP.
-					$force_now  = $this->auto_renew || ( $member->get_subscription_id() != $this->subscription_id );
-					$expiration = $member->calculate_expiration( $force_now );
-					$member->set_subscription_id( $this->subscription_id );
-					$member->set_expiration_date( $expiration );
-					$member->set_status( 'active' );
+					$error_messages = $response->getMessages()->getMessage();
+					$error          = '<p>' . __( 'There was a problem processing your payment.', 'rcp' ) . '</p>';
+					$error         .= '<p>' . sprintf( __( 'Error code: %s', 'rcp' ), $error_messages[0]->getCode() ) . '</p>';
+					$error         .= '<p>' . sprintf( __( 'Error message: %s', 'rcp' ), $error_messages[0]->getText() ) . '</p>';
 
-					/*
-					 * Set pending expiration date so this will be used in rcp_add_user_to_subscription() when the webhook
-					 * gets the transaction ID and completes the payment, which may take several hours.
-					 */
-					update_user_meta( $this->user_id, 'rcp_pending_expiration_date', $expiration );
+					$this->handle_processing_error( new Exception( $error ) );
 
 				}
-
-				$member->add_note( __( 'Subscription started in Authorize.net', 'rcp' ) );
-
-				if ( ! is_user_logged_in() ) {
-
-					// log the new user in
-					rcp_login_user_in( $this->user_id, $this->user_name, $_POST['rcp_user_pass'] );
-
-				}
-
-				do_action( 'rcp_authorizenet_signup', $this->user_id, $this, $response );
 
 			} else {
 
-				$errorMessages = $response->getMessages()->getMessage();
-				$this->error_message = $errorMessages[0]->getCode() . "  " .$errorMessages[0]->getText();
+				/**
+				 * Process one-time transaction.
+				 */
 
-				do_action( 'rcp_registration_failed', $this );
+				/**
+				 * Create new order.
+				 */
+				$order = new AnetAPI\OrderType();
+				$order->setInvoiceNumber( $this->payment->id );
+				$order->setDescription( $this->payment->subscription );
 
-				wp_die( $this->error_message, __( 'Error', 'rcp' ), array( 'response' => '401' ) );
+				/**
+				 * Set up billing information.
+				 */
+				$bill_to = new AnetAPI\CustomerAddressType();
+				$bill_to->setFirstName( $fname );
+				$bill_to->setLastName( $lname );
+				$bill_to->setZip( sanitize_text_field( $_POST['rcp_card_zip'] ) );
+				$bill_to->setEmail( $this->email );
+
+				/**
+				 * Create a transaction and add all the information.
+				 */
+				$transaction = new AnetAPI\TransactionRequestType();
+				$transaction->setTransactionType( 'authCaptureTransaction' );
+				$transaction->setAmount( $this->initial_amount );
+				$transaction->setPayment( $payment );
+				$transaction->setOrder( $order );
+				$transaction->setBillTo( $bill_to );
+
+				/**
+				 * Make API request.
+				 */
+				$request = new AnetAPI\CreateTransactionRequest();
+				$request->setMerchantAuthentication( $merchant_authentication );
+				$request->setRefId( $refId );
+				$request->setTransactionRequest( $transaction );
+				$controller = new AnetController\CreateTransactionController( $request );
+
+				$environment = rcp_is_sandbox() ? \net\authorize\api\constants\ANetEnvironment::SANDBOX : \net\authorize\api\constants\ANetEnvironment::PRODUCTION;
+
+				$response = $controller->executeWithApiResponse( $environment );
+
+				if ( $response != null && $response->getMessages()->getResultCode() == "Ok" ) {
+
+					$transaction_response = $response->getTransactionResponse();
+
+					if ( ! empty( $transaction_response ) && '1' == $transaction_response->getResponseCode() ) {
+
+						/**
+						 * Payment was successful. Complete the pending payment and activate the subscription.
+						 */
+						$rcp_payments_db->update( $this->payment->id, array(
+							'date'           => date( 'Y-m-d g:i:s', time() ),
+							'payment_type'   => __( 'Authorize.net Credit Card One Time', 'rcp' ),
+							'transaction_id' => 'anet_' . $transaction_response->getTransID(),
+							'status'         => 'complete'
+						) );
+
+						do_action( 'rcp_gateway_payment_processed', $member, $this->payment->id, $this );
+
+					} else {
+
+						/**
+						 * API request was successful but card was declined.
+						 */
+						$errors  = $transaction_response->getErrors();
+						$error   = '<p>' . __( 'There was a problem processing your payment.', 'rcp' ) . '</p>';
+						$error  .= '<p>' . sprintf( __( 'Error code: %s', 'rcp' ), $errors[0]->getErrorCode() ) . '</p>';
+						$error  .= '<p>' . sprintf( __( 'Error message: %s', 'rcp' ), $errors[0]->getErrorText() ) . '</p>';
+
+						$this->handle_processing_error( new Exception( $error ) );
+
+					}
+
+				} else {
+
+					/**
+					 * Something in the API request failed or no response from Authorize.net.
+					 */
+					$error_messages = $response->getMessages()->getMessage();
+					$error          = '<p>' . __( 'There was a problem processing your payment.', 'rcp' ) . '</p>';
+					$error         .= '<p>' . sprintf( __( 'Error code: %s', 'rcp' ), $error_messages[0]->getCode() ) . '</p>';
+					$error         .= '<p>' . sprintf( __( 'Error message: %s', 'rcp' ), $error_messages[0]->getText() ) . '</p>';
+
+					$this->handle_processing_error( new Exception( $error ) );
+
+				}
 
 			}
 
 		} catch ( AuthorizeNetException $e ) {
-			$this->error_message = $e->getMessage();
-			do_action( 'rcp_registration_failed', $this );
-			wp_die( $e->getMessage(), __( 'Error', 'rcp' ), array( 'response' => '401' ) );
+			$this->handle_processing_error( $e );
 		}
 
 		// redirect to the success page, or error page if something went wrong
 		wp_redirect( $this->return_url ); exit;
+	}
+
+	/**
+	 * Handles the error processing.
+	 *
+	 * @param Exception $exception
+	 *
+	 * @since 2.9.5
+	 * @return void
+	 */
+	protected function handle_processing_error( $exception ) {
+
+		$this->error_message = $exception->getMessage();
+
+		do_action( 'rcp_registration_failed', $this );
+
+		wp_die( $exception->getMessage(), __( 'Error', 'rcp' ), array( 'response' => 401 ) );
+
 	}
 
 	/**
