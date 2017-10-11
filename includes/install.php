@@ -174,8 +174,7 @@ function rcp_options_install( $network_wide = false ) {
 	// and option that allows us to make sure RCP is installed
 	update_option( 'rcp_is_installed', '1' );
 	update_option( 'rcp_version', RCP_PLUGIN_VERSION );
-	
-	do_action( 'rcp_options_install' );
+
 }
 // run the install scripts upon plugin activation
 register_activation_hook( RCP_PLUGIN_FILE, 'rcp_options_install' );
