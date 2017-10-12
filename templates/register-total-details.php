@@ -66,7 +66,7 @@ if ( ! rcp_is_registration() ) {
 
 		<tr class="rcp-total">
 			<th><?php _e( 'Total Today', 'rcp' ); ?></th>
-			<th data-th="<?php esc_attr_e( 'Total Today', 'rcp' ); ?>"><?php rcp_registration_total(); ?></th>
+			<td data-th="<?php esc_attr_e( 'Total Today', 'rcp' ); ?>"><?php rcp_registration_total(); ?></td>
 		</tr>
 
 		<?php if ( rcp_registration_is_recurring() ) : ?>
