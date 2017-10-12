@@ -912,7 +912,23 @@ add_action( 'rcp_registration_init', 'rcp_add_prorate_fee' );
  * @return void
  */
 function rcp_add_prorate_message() {
-	if ( ! $amount = rcp_get_member_prorate_credit() ) {
+	$upgrade_paths = rcp_get_upgrade_paths( get_current_user_id() );
+	$has_upgrade   = false;
+
+	/*
+	 * The proration message should only be shown if the user has at least one upgrade
+	 * option available where the price is greater than $0.
+	 */
+	if ( ! empty( $upgrade_paths ) ) {
+		foreach ( $upgrade_paths  as $subscription_level ) {
+			if ( $subscription_level->id != rcp_get_subscription_id() && ( $subscription_level->price > 0 || $subscription_level->fee > 0 ) ) {
+				$has_upgrade = true;
+				break;
+			}
+		}
+	}
+
+	if ( ( ! $amount = rcp_get_member_prorate_credit() ) || ( ! $has_upgrade ) ) {
 		return;
 	}
 

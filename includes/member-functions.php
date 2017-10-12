@@ -808,7 +808,7 @@ function rcp_subscription_upgrade_possible( $user_id = 0 ) {
  *
  * @uses  rcp_get_upgrade_paths()
  *
- * @param int $user_id the ID of the user to check, or 0 for the current user.
+ * @param int $user_id The ID of the user to check, or 0 for the current user.
  *
  * @since  2.5
  * @return bool True if an upgrade path is available, false if not.
@@ -820,7 +820,7 @@ function rcp_has_upgrade_path( $user_id = 0 ) {
 /**
  * Get subscriptions to which this user can upgrade
  *
- * @param int $user_id the ID of the user to check, or 0 for the current user.
+ * @param int $user_id The ID of the user to check, or 0 for the current user.
  *
  * @since 2.5
  * @return array Array of subscriptions.
