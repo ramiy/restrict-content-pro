@@ -74,6 +74,10 @@ class RCP_Payment_Gateway_Authorizenet extends RCP_Payment_Gateway {
 				rcp_errors()->add( 'invalid_authorize_length', __( 'Authorize.net does not permit subscriptions with renewal periods less than 7 days.', 'rcp' ), 'register' );
 			}
 
+			if( rcp_registration_is_recurring() && 'year' == $sub->duration_unit && $sub->duration > 1 ) {
+				rcp_errors()->add( 'invalid_authorize_length_years', __( 'Authorize.net does not permit subscriptions with renewal periods greater than 1 year.', 'rcp' ), 'register' );
+			}
+
 		}
 
 	}
