@@ -143,10 +143,62 @@ class RCP_Payment_Gateway_Authorizenet extends RCP_Payment_Gateway {
 			$payment = new AnetAPI\PaymentType();
 			$payment->setCreditCard( $credit_card );
 
+			$environment = rcp_is_sandbox() ? \net\authorize\api\constants\ANetEnvironment::SANDBOX : \net\authorize\api\constants\ANetEnvironment::PRODUCTION;
+
 			/**
 			 * Create a recurring subscription.
 			 */
 			if ( $this->auto_renew ) {
+
+				/**
+				 * First authorize the initial amount because Authorize.net doesn't actually
+				 * take payment until several hours later. If this fails then we won't be
+				 * creating the subscription.
+				 */
+				rcp_log( sprintf( 'Authorizing initial payment amount with Authorize.net for user #%d.', $this->user_id ) );
+
+				$auth_transaction = new AnetAPI\TransactionRequestType();
+				$auth_transaction->setTransactionType( 'authOnlyTransaction' );
+				$auth_transaction->setAmount( $this->initial_amount );
+				$auth_transaction->setPayment( $payment );
+
+				$auth_request = new AnetAPI\CreateTransactionRequest();
+				$auth_request->setMerchantAuthentication( $merchant_authentication );
+				$auth_request->setRefId( $refId );
+				$auth_request->setTransactionRequest( $auth_transaction );
+
+				$auth_controller = new AnetController\CreateTransactionController( $auth_request );
+				$auth_response   = $auth_controller->executeWithApiResponse( $environment );
+
+				// Invalid or no response from Authorize.net.
+				if ( empty( $auth_response ) ) {
+					$error_messages = $auth_response->getMessages()->getMessage();
+					$error          = '<p>' . __( 'There was a problem processing your payment.', 'rcp' ) . '</p>';
+					$error         .= '<p>' . sprintf( __( 'Error code: %s', 'rcp' ), $error_messages[0]->getCode() ) . '</p>';
+					$error         .= '<p>' . sprintf( __( 'Error message: %s', 'rcp' ), $error_messages[0]->getText() ) . '</p>';
+
+					rcp_log( sprintf( 'Authorize.net card authorization failed for user #%d. Invalid response from Authorize.net. Error code: %s. Error message: %s.', $this->user_id, $error_messages[0]->getCode(), $error_messages[0]->getText() ) );
+
+					$this->handle_processing_error( new Exception( $error ) );
+				}
+
+				$auth_transaction_response = $auth_response->getTransactionResponse();
+
+				// Successful API request, but authorization was not successful.
+				if ( empty( $auth_transaction_response ) || $auth_transaction_response->getResponseCode() != '1' ) {
+					$errors  = $auth_transaction_response->getErrors();
+					$error   = '<p>' . __( 'There was a problem processing your payment.', 'rcp' ) . '</p>';
+					$error  .= '<p>' . sprintf( __( 'Error code: %s', 'rcp' ), $errors[0]->getErrorCode() ) . '</p>';
+					$error  .= '<p>' . sprintf( __( 'Error message: %s', 'rcp' ), $errors[0]->getErrorText() ) . '</p>';
+
+					rcp_log( sprintf( 'Authorize.net card authorization failed for user #%d. Card was declined. Error code: %s. Error message: %s.', $this->user_id, $errors[0]->getErrorCode(), $errors[0]->getErrorText() ) );
+
+					$this->handle_processing_error( new Exception( $error ) );
+				}
+
+				/**
+				 * Authorization was successful! Now we can create the actual subscription.
+				 */
 
 				/**
 				 * Configure the subscription information.
@@ -208,8 +260,6 @@ class RCP_Payment_Gateway_Authorizenet extends RCP_Payment_Gateway {
 				$request->setRefId( $refId );
 				$request->setSubscription( $subscription );
 				$controller = new AnetController\ARBCreateSubscriptionController( $request );
-
-				$environment = rcp_is_sandbox() ? \net\authorize\api\constants\ANetEnvironment::SANDBOX : \net\authorize\api\constants\ANetEnvironment::PRODUCTION;
 
 				$response = $controller->executeWithApiResponse( $environment );
 
@@ -310,8 +360,6 @@ class RCP_Payment_Gateway_Authorizenet extends RCP_Payment_Gateway {
 				$request->setRefId( $refId );
 				$request->setTransactionRequest( $transaction );
 				$controller = new AnetController\CreateTransactionController( $request );
-
-				$environment = rcp_is_sandbox() ? \net\authorize\api\constants\ANetEnvironment::SANDBOX : \net\authorize\api\constants\ANetEnvironment::PRODUCTION;
 
 				$response = $controller->executeWithApiResponse( $environment );
 
@@ -512,6 +560,17 @@ class RCP_Payment_Gateway_Authorizenet extends RCP_Payment_Gateway {
 				// Other Error
 				do_action( 'rcp_authorizenet_silent_post_error', $member, $this );
 
+			}
+
+			/*
+			 * Cancel the membership immediately if payment was not successful and this was
+			 * the first charge not part of a trial. This should probably never happen since
+			 * we authorize cards beforehand, but just in case authorization was successful
+			 * but the actual charge fails a few hours later.
+			 */
+			if ( 1 != $response_code && 1 == intval( $_POST['x_subscription_paynum'] ) && ! $member->is_trialing() ) {
+				rcp_log( sprintf( 'Cancelling membership for user #%d, as initial charge from Authorize.net failed. Response code: %d', $member->ID, $response_code ) );
+				$member->set_status( 'expired' );
 			}
 		}
 
